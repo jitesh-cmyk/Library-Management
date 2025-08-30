@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Library Management System with Student Details</title>
+  <style>
+    * {margin: 0; padding: 0; box-sizing: border-box;}
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 30px;
+    }
+    .container {
+      background: #fff;
+      border-radius: 15px;
+      padding: 25px;
+      width: 95%;
+      max-width: 1100px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+      animation: fadeIn 1s ease-in-out;
+    }
+    header {text-align: center; margin-bottom: 20px;}
+    header h1 {color: #333;}
+    .form-section, .search-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input, button, select {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      outline: none;
+      font-size: 15px;
+    }
+    input, select {flex: 1; min-width: 150px;}
+    button {
+      background: #2575fc;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {background: #1b5edb;}
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    th {background: #2575fc; color: white;}
+    tr:hover {background: #f2f2f2;}
+    .delete-btn {
+      background: #e74c3c;
+    }
+    .delete-btn:hover {background: #c0392b;}
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(-20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📚 Library Management (With Student Details)</h1>
+    </header>
+
+    <!-- Book + Student Form -->
+    <div class="form-section">
+      <input type="text" id="bookId" placeholder="Book ID">
+      <input type="text" id="title" placeholder="Book Title">
+      <input type="text" id="author" placeholder="Author">
+      <input type="text" id="year" placeholder="Year">
+
+      <input type="text" id="studentName" placeholder="Student Name">
+      <input type="text" id="rollNo" placeholder="Roll Number">
+      <input type="text" id="phone" placeholder="Phone Number">
+      <select id="branch">
+        <option value="">Select Branch</option>
+        <option value="CSE">CSE</option>
+        <option value="IT">IT</option>
+        <option value="ECE">ECE</option>
+        <option value="ME">ME</option>
+        <option value="EE">EE</option>
+        <option value="Civil">Civil</option>
+      </select>
+
+      <button onclick="addBook()">➕ Add Book</button>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section">
+      <input type="text" id="searchInput" placeholder="Search by Book ID, Title, Student Name">
+      <button onclick="searchBook()">🔍 Search</button>
+      <button onclick="displayBooks()">📑 Show All</button>
+    </div>
+
+    <!-- Table -->
+    <table id="bookTable">
+      <thead>
+        <tr>
+          <th>Book ID</th>
+          <th>Title</th>
+          <th>Author</th>
+          <th>Year</th>
+          <th>Student Name</th>
+          <th>Roll No</th>
+          <th>Phone</th>
+          <th>Branch</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Book list will appear here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    let library = JSON.parse(localStorage.getItem("library")) || [];
+
+    function saveToStorage() {
+      localStorage.setItem("library", JSON.stringify(library));
+    }
+
+    function addBook() {
+      let id = document.getElementById("bookId").value.trim();
+      let title = document.getElementById("title").value.trim();
+      let author = document.getElementById("author").value.trim();
+      let year = document.getElementById("year").value.trim();
+
+      let studentName = document.getElementById("studentName").value.trim();
+      let rollNo = document.getElementById("rollNo").value.trim();
+      let phone = document.getElementById("phone").value.trim();
+      let branch = document.getElementById("branch").value;
+
+      if (!id || !title || !author || !year || !studentName || !rollNo || !phone || !branch) {
+        alert("⚠️ Please fill all fields!");
+        return;
+      }
+
+      let exists = library.some(book => book.id === id);
+      if (exists) {
+        alert("⚠️ Book with this ID already exists!");
+        return;
+      }
+
+      let book = { id, title, author, year, studentName, rollNo, phone, branch };
+      library.push(book);
+      saveToStorage();
+      displayBooks();
+
+      document.querySelectorAll("input").forEach(el => el.value = "");
+      document.getElementById("branch").value = "";
+    }
+
+    function displayBooks(filteredBooks = library) {
+      let tableBody = document.querySelector("#bookTable tbody");
+      tableBody.innerHTML = "";
+
+      filteredBooks.forEach(book => {
+        let row = tableBody.insertRow();
+        row.insertCell(0).innerText = book.id;
+        row.insertCell(1).innerText = book.title;
+        row.insertCell(2).innerText = book.author;
+        row.insertCell(3).innerText = book.year;
+        row.insertCell(4).innerText = book.studentName;
+        row.insertCell(5).innerText = book.rollNo;
+        row.insertCell(6).innerText = book.phone;
+        row.insertCell(7).innerText = book.branch;
+        row.insertCell(8).innerHTML = `<button class="delete-btn" onclick="deleteBook('${book.id}')">🗑 Delete</button>`;
+      });
+    }
+
+    function searchBook() {
+      let keyword = document.getElementById("searchInput").value.toLowerCase();
+      let filteredBooks = library.filter(book =>
+        book.id.toLowerCase().includes(keyword) ||
+        book.title.toLowerCase().includes(keyword) ||
+        book.studentName.toLowerCase().includes(keyword)
+      );
+
+      if (filteredBooks.length > 0) {
+        displayBooks(filteredBooks);
+      } else {
+        alert("❌ No matching record found!");
+      }
+    }
+
+    function deleteBook(id) {
+      library = library.filter(book => book.id !== id);
+      saveToStorage();
+      displayBooks();
+    }
+
+    // Initial display
+    displayBooks();
+  </script>
+</body>
+</html>
